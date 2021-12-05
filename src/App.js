@@ -1,21 +1,79 @@
-import Profile from './components/profile/Profile';
-import user from './components/user.json';
+import { Component } from 'react';
 
-export default function App() {
-  return (
-    <div>
-      <Profile
-        url={user.avatar}
-        userName={user.username}
-        userTag={user.tag}
-        locate={user.location}
-        followers={user.stats.followers}
-        views={user.stats.views}
-        likes={user.stats.likes}
-      />
-      <Statistics title="Upload stats" stats={data} />
-      <FriendList friends={friends} />
-      <TransactionHistory transactions={transactions} />
-    </div>
-  );
+// importComponent
+import Section from './components/phonebook/section/Section';
+import Form from './components/phonebook/form/Form';
+import Contacts from './components/phonebook/contacts/Contacts';
+import Filter from './components/phonebook/filter/Filter';
+
+// importScripts
+import { alert } from '@pnotify/core';
+import '@pnotify/core/dist/PNotify.css';
+import '@pnotify/core/dist/BrightTheme.css';
+import { nanoid } from 'nanoid';
+
+class App extends Component {
+  state = {
+    contacts: [],
+    filter: '',
+  };
+
+  formSubmit = data => {
+    const contactData = this.state.contacts.find(elem =>
+      elem.name.includes(data.name),
+    );
+
+    if (contactData) {
+      const existUserAlert = alert({
+        title: 'Alert',
+        text: `${contactData.name} is already in contacts`,
+      });
+    } else {
+      const userId = { id: nanoid() };
+
+      this.setState(prevState => ({
+        contacts: [...prevState.contacts, { ...userId, ...data }],
+      }));
+    }
+  };
+
+  filterChange = e => {
+    const { name, value } = e.currentTarget;
+    this.setState({
+      [name]: value,
+    });
+  };
+
+  deleteContact = contactId => {
+    this.setState(prevState => ({
+      contacts: prevState.contacts.filter(contact => contact.id !== contactId),
+    }));
+  };
+
+  filterContacts = () => {
+    const normalizeFilter = this.state.filter.toLowerCase();
+    return this.state.contacts.filter(contact =>
+      contact.name.toLowerCase().includes(normalizeFilter),
+    );
+  };
+
+  render() {
+    const filterContact = this.filterContacts();
+    return (
+      <>
+        <Section title={'Phonebook'}>
+          <Form onSubmit={this.formSubmit} />
+        </Section>
+        <Section title={'Contacts'}>
+          <Filter value={this.state.filter} onChange={this.filterChange} />
+          <Contacts
+            contacts={filterContact}
+            deleteContact={this.deleteContact}
+          />
+        </Section>
+      </>
+    );
+  }
 }
+
+export default App;
